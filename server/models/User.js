@@ -7,9 +7,9 @@ const userSchema = new mongoose.Schema({
   password: String,
   role: { type: String, default: 'user' },
   photo : String,
-}); {timestamps:true}
+}) ;
 
-userSchema.pre('save', async function () {
+userSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
     this.password = await bcrypt.hash(this.password, 10);
   }

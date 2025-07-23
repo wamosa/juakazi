@@ -2,12 +2,16 @@ import React from 'react';
 
 export default function SearchBar({ onSearch }) {
   const [query, setQuery] = React.useState('');
+   const handleSubmit = (e) => {
+    e.preventDefault(); // Prevent page reload
+    if (onSearch) {
+      onSearch(query); // Call parent search function
+    }
+  };
+  
+  
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSearch(query);
-      }}
+    <form onSubmit={handleSubmit}
       className="flex items-center gap-2 mb-4"
     >
       <input
