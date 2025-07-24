@@ -7,7 +7,7 @@ import SearchBar from '../components/SearchBar';
 import FilterBar from '../components/FilterBar';
 import Footer from '../components/Footer';
 import { Link, animateScroll as scroll } from 'react-scroll';
-import { FaBars } from 'react-icons/fa';
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 export default function Home() {
   const [workers, setWorkers] = useState([]);
@@ -15,13 +15,22 @@ export default function Home() {
   const [filters, setFilters] = useState({ skill: '', county: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isMenuOpen , setIsMenuOpen] =  useState(false);
 
+    const toggleMenu = () => {
+    setIsMenuOpen(prev => !prev);
+  };
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
-  }, []);
+  const handleStorageChange = () => {
+    setIsLoggedIn(!!localStorage.getItem('token'));
+  };
+
+  window.addEventListener('storage', handleStorageChange);
+  return () => window.removeEventListener('storage', handleStorageChange);
+}, []);
+
+ 
 
   useEffect(() => {
     const fetchWorkers = async () => {
@@ -65,28 +74,34 @@ export default function Home() {
       </Helmet>
 
       {/* Navbar */}
-      <nav className="bg-blue-900 text-yellow-100 p-4 sticky top-0 z-50">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold">JuaKazi</h1>
-          <button onClick={() => setMenuOpen(!menuOpen)} className="sm:hidden">
-            <FaBars size={24} />
+        <nav className="flex items-center justify-between px-6 py-4 bg-white shadow-md fixed w-full top-0 z-50">
+        <h1 className="text-2xl font-bold text-blue-800">JuaKazi</h1>
+        
+        {/* Menu Icon */}
+        <div className="md:hidden">
+          <button onClick={toggleMenu} className="text-blue-800 text-2xl focus:outline-none">
+            {isMenuOpen ? <FaTimes /> : <FaBars />}
           </button>
-          <ul className="hidden sm:flex gap-6">
-            <li><Link to="hero" smooth duration={500} className="cursor-pointer hover:underline">Home</Link></li>
-            <li><Link to="why" smooth duration={500} className="cursor-pointer hover:underline">Why JuaKazi</Link></li>
-            <li><Link to="search" smooth duration={500} className="cursor-pointer hover:underline">Search</Link></li>
-            <li><Link to="cta" smooth duration={500} className="cursor-pointer hover:underline">Join</Link></li>
-          </ul>
         </div>
-        {menuOpen && (
-          <ul className="sm:hidden mt-2 flex flex-col gap-2">
-            <li><Link to="hero" smooth duration={500} className="cursor-pointer" onClick={() => setMenuOpen(false)}>Home</Link></li>
-            <li><Link to="why" smooth duration={500} className="cursor-pointer" onClick={() => setMenuOpen(false)}>About</Link></li>
-            <li><Link to="search" smooth duration={500} className="cursor-pointer" onClick={() => setMenuOpen(false)}>Find workers</Link></li>
-            <li><Link to="cta" smooth duration={500} className="cursor-pointer" onClick={() => setMenuOpen(false)}>Join</Link></li>
-          </ul>
-        )}
+
+        {/* Desktop Menu */}
+        <div className="hidden md:flex space-x-6 text-blue-800">
+          <Link to="hero" className="hover:text-yellow-500">Home</Link>
+          <Link to="why" className="hover:text-yellow-500">Login / Register</Link>
+          <Link to="categories" className="hover:text-yellow-500">Browse Workers</Link>
+          <Link to="cta" className="hover:text-yellow-500">Contact</Link>
+        </div>
       </nav>
+       {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white absolute top-16 left-0 w-full z-40 shadow-lg px-6 py-4 space-y-4">
+          <Link onClick={toggleMenu} to="hero" className="block text-blue-800 hover:text-yellow-500">Home</Link>
+          <Link onClick={toggleMenu} to="why" className="block text-blue-800 hover:text-yellow-500">Login / Register</Link>
+          <a onClick={toggleMenu} href="categories" className="block text-blue-800 hover:text-yellow-500">Browse Workers</a>
+          <a onClick={toggleMenu} href="cta" className="block text-blue-800 hover:text-yellow-500">Contact</a>
+        </div>
+      )}
+    
 
       {/* Hero Section with image */}
       <motion.section

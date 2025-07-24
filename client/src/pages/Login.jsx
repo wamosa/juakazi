@@ -44,7 +44,8 @@ export default function Login() {
         localStorage.setItem('token', res.token);
       }
 
-      navigate('/');
+      navigate('/', {replace: true});
+      window.location.reload();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || 'Login/Register failed');
