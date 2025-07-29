@@ -60,4 +60,3 @@ export const deleteWorker = async (id) => {
   const res = await api.delete(`/workers/${id}`);
   return res.data;
 };
-export {api};

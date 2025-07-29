@@ -44,7 +44,7 @@ export default function Login() {
         localStorage.setItem('token', res.token);
       }
 
-      navigate('/', {replace: true});
+      navigate('/worker/:id"');
       window.location.reload();
     } catch (err) {
       console.error(err);
