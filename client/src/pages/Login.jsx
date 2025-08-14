@@ -34,13 +34,13 @@ export default function Login() {
         data.append('password', formData.password);
         if (formData.photo) data.append('photo', formData.photo);
 
-        const res = await register(data); // ✅ Use register directly
+        const res = await register(data); 
         localStorage.setItem('token', res.token);
       } else {
         const res = await login({
           email: formData.email,
           password: formData.password,
-        }); // ✅ Use login directly
+        }); 
         localStorage.setItem('token', res.token);
       }
 

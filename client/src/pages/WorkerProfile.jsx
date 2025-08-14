@@ -1,122 +1,159 @@
-// src/pages/Login.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { api} from '../services/api';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getWorkerById, updateWorker, deleteWorker } from '../services/api';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
-export default function Login() {
+export default function WorkerProfile() {
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [worker, setWorker] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
-    password: '',
-    photo: null,
+    skill: '',
+    county: '',
+    contact: '',
   });
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === 'photo') {
-      setFormData({ ...formData, photo: files[0] });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (isRegistering) {
-        const data = new FormData();
-        data.append('name', formData.name);
-        data.append('email', formData.email);
-        data.append('password', formData.password);
-        if (formData.photo) data.append('photo', formData.photo);
-
-        const res = await api.register(data);
-        localStorage.setItem('token', res.token);
-      } else {
-        const res = await api.login({
-          email: formData.email,
-          password: formData.password,
+  useEffect(() => {
+    const fetchWorker = async () => {
+      try {
+        const cleanId = id?.replace(/['"]/g, ''); // remove quotes if accidentally included
+        const data = await getWorkerById(cleanId);
+        setWorker(data);
+        setFormData({
+          name: data.name || '',
+          skill: data.skill || '',
+          county: data.county || '',
+          contact: data.contact || '',
         });
-        localStorage.setItem('token', res.token);
+      } catch (error) {
+        console.error('Error fetching worker:', error);
+        alert('Failed to load worker. Please try again later.');
       }
+    };
 
-      navigate('/');
-    } catch (err) {
-      alert(err.message || 'Login/Register failed');
+    fetchWorker();
+  }, [id]);
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleUpdate = async () => {
+    try {
+      const updated = await updateWorker(id, formData);
+      setWorker(updated);
+      setIsEditing(false);
+      alert('Worker updated successfully');
+    } catch (error) {
+      console.error('Update failed:', error);
+      alert('Failed to update worker');
     }
   };
+
+  const handleDelete = async () => {
+    const confirm = window.confirm('Are you sure you want to delete this worker?');
+    if (!confirm) return;
+
+    try {
+      await deleteWorker(id);
+      alert('Worker deleted');
+      navigate('/');
+    } catch (error) {
+      console.error('Delete failed:', error);
+      alert('Failed to delete worker');
+    }
+  };
+
+  if (!worker) return <div className="text-center p-4">Loading worker profile...</div>;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 container mx-auto p-4 max-w-md">
-        <h2 className="text-2xl font-bold mb-4">
-          {isRegistering ? 'Register as Worker' : 'Login'}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {isRegistering && (
-            <>
-              <input
-                type="text"
-                name="name"
-                placeholder="Full Name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-                required
-              />
-              <input
-                type="file"
-                name="photo"
-                accept="image/*"
-                onChange={handleChange}
-                className="w-full"
-              />
-            </>
-          )}
+      <main className="flex-1 container mx-auto p-4 max-w-2xl">
+        <h2 className="text-3xl font-bold mb-6">Worker Profile</h2>
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            required
+        {worker.photoUrl && (
+          <img
+            src={worker.photoUrl}
+            alt={worker.name}
+            className="w-40 h-40 object-cover rounded-full mb-4"
           />
+        )}
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full border p-2 rounded"
-            required
-          />
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white p-2 rounded"
-          >
-            {isRegistering ? 'Register' : 'Login'}
-          </button>
-
-          <p className="text-sm mt-2 text-center">
-            {isRegistering ? 'Already have an account?' : 'New user?'}{' '}
-            <button
-              type="button"
-              onClick={() => setIsRegistering(!isRegistering)}
-              className="text-blue-600 underline"
-            >
-              {isRegistering ? 'Login' : 'Register'}
-            </button>
-          </p>
-        </form>
+        {isEditing ? (
+          <div className="space-y-4">
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+              placeholder="Full Name"
+            />
+            <input
+              type="text"
+              name="skill"
+              value={formData.skill}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+              placeholder="Skill"
+            />
+            <input
+              type="text"
+              name="county"
+              value={formData.county}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+              placeholder="County"
+            />
+            <input
+              type="text"
+              name="contact"
+              value={formData.contact}
+              onChange={handleChange}
+              className="w-full border p-2 rounded"
+              placeholder="Contact Info"
+            />
+            <div className="flex gap-4">
+              <button
+                onClick={handleUpdate}
+                className="bg-green-600 text-white px-4 py-2 rounded"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="bg-gray-400 text-white px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2 text-lg">
+            <p><strong>Name:</strong> {worker.name}</p>
+            <p><strong>Skill:</strong> {worker.skill}</p>
+            <p><strong>County:</strong> {worker.county}</p>
+            <p><strong>Contact:</strong> {worker.contact}</p>
+            <div className="flex gap-4 mt-4">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="bg-yellow-500 text-white px-4 py-2 rounded"
+              >
+                Edit
+              </button>
+              <button
+                onClick={handleDelete}
+                className="bg-red-600 text-white px-4 py-2 rounded"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
       </main>
       <Footer />
     </div>
